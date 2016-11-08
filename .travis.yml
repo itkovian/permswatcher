@@ -3,7 +3,6 @@ cache: cargo
 sudo: false
 os:
     - linux
-    - osx
 before_script: (cargo install rustfmt || true)
 script:
 - |

@@ -1,6 +1,6 @@
 # Permission watcher
 
-[![Travis](https://img.shields.io/travis/itkovian/notify.svg?style=flat-square)][build-unix] <sup>(Linux)</sup>
+[![Travis](https://img.shields.io/travis/itkovian/permswatcher.svg)]()
 
 - Monitors permissions on a given set of directories
 - Add directories to monitor as needed, based on directory patterns

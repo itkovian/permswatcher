@@ -19,13 +19,14 @@ use notify::op::{Op};
 
 pub mod task;
 pub mod pattern;
-
+pub mod watcher;
 
 
 
 /// The options for the permission watcher
 ///
-///     - path: can take multiple values
+///     - path: can take multiple value,
+///     metadata: s
 ///     - log: boolean indicating if events should be logged
 fn get_opts<'a>() -> ArgMatches<'a> {
     App::new("Permission watcher")
@@ -65,20 +66,6 @@ fn init_logger(loglevel: &str) {
     log_builder.init().expect("unable to initialize logger");
 }
 
-/// Add monitoring for the given path, no recursion
-fn add_watch(watcher: &mut RecommendedWatcher, path: &PathBuf) -> () {
-        match Path::new(path).canonicalize() {
-            Ok(canonical_path) => {
-                watcher.watch(&canonical_path, RecursiveMode::NonRecursive).expect("Cannot watch path");
-                info!("Watching path {:?}", canonical_path);
-            },
-            Err(_)             => {
-                info!("Invalid path");
-                return;
-            }
-        }
-}
-
 
 fn main() {
     let opts = get_opts();
@@ -91,7 +78,7 @@ fn main() {
     let mut watcher: RecommendedWatcher = Watcher::new_raw(tx).expect("Failed creating a watcher");
 
     for path in paths {
-        add_watch(&mut watcher, & PathBuf::from(path));
+        watcher::add_watch(&mut watcher, & PathBuf::from(path));
     }
 
     let e = watch(&rx, &mut watcher, &patterns);
@@ -129,14 +116,15 @@ fn process(rx: &Receiver<notify::RawEvent>,
                                                     .filter(|p| p.is_match(path, op))
                                                     .cloned()
                                                     .collect(); // There should be a single match.
-            if ps.len() > 1 {
-                warn!("Multiple patterns match for path {:?}", path);
-            }
-            else {
-                println!("Found the following match: {:?}", ps[0]);
-            }
+            match ps.len() {
+                0 => warn!("No matching pattern found for operation {:?} on path {:?}", op, path), 
+                1 => task::conduct_tasks(&ps[0].tasks, path, watcher, &metadata),
+                _ => warn!("Multiple matching patterns found for operation {:?} on path {:?}", op, path),
+            };
+
         },
         Err(_) => warn!("Cannot get metadata for {:?}", path)
     };
 }
+
 

@@ -22,7 +22,7 @@ pub struct Pattern {
     name: String,
     op: Op,
     pattern: Regex,
-    tasks: Vec<Task>,
+    pub tasks: Vec<Task>,
 }
 
 
@@ -41,6 +41,10 @@ impl Pattern {
     pub fn is_match(&self, path: &PathBuf, op: &notify::op::Op) -> bool {
         self.pattern.is_match(&path.to_str().unwrap()) && self.op.eq(op)
     }
+
+
+
+
 }
 
 

@@ -8,5 +8,4 @@ script:
 - |
   export PATH=$PATH:~/.cargo/bin &&
   cargo build &&
-  cargo test &&
-  cargo fmt -- --write-mode=diff
+  cargo test 

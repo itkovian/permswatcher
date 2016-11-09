@@ -22,17 +22,19 @@ pub struct Pattern {
     name: String,
     op: Op,
     pattern: Regex,
+    permission_mask: u32,
     pub tasks: Vec<Task>,
 }
 
 
 impl Pattern {
 
-    pub fn new(name: String, op: Op, pattern: Regex, tasks: Vec<Task>) -> Pattern {
+    pub fn new(name: String, op: Op, pattern: Regex, permission_mask: u32, tasks: Vec<Task>) -> Pattern {
         Pattern {
             name: name,
             op: op,
             pattern: pattern,
+            permission_mask: permission_mask,
             tasks: tasks,
         }
     }
@@ -57,6 +59,7 @@ pub fn predefined_patterns() -> Vec<Pattern> {
         String::from("USR grouping dir"),
         notify::op::CREATE,
         Regex::new("^/.*/vsc[0-9]{3}$").unwrap(),
+        0o750,
         vec![Task::AddWatcher, Task::Rescan]));
 
     // USR personal directories
@@ -64,6 +67,7 @@ pub fn predefined_patterns() -> Vec<Pattern> {
         String::from("USR personal dir"),
         notify::op::CHMOD,
         Regex::new("^/.*/vsc[0-9]{3}/vsc[0-9]{5}$").unwrap(),
+        0o750,
         vec![Task::PermissionCheck]));
 
     m

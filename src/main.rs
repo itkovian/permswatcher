@@ -118,7 +118,7 @@ fn process(rx: &Receiver<notify::RawEvent>,
                                                     .collect(); // There should be a single match.
             match ps.len() {
                 0 => warn!("No matching pattern found for operation {:?} on path {:?}", op, path), 
-                1 => task::conduct_tasks(&ps[0].tasks, path, watcher, &metadata),
+                1 => task::conduct_tasks(&ps[0], path, watcher, &metadata),
                 _ => warn!("Multiple matching patterns found for operation {:?} on path {:?}", op, path),
             };
 

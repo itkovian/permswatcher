@@ -17,6 +17,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
 use watcher;
+use pattern::{Pattern};
 
 /// Task type
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -28,15 +29,15 @@ pub enum Task {
 
 
 /// Perform the tasks
-pub fn conduct_tasks(tasks: &Vec<Task>,
+pub fn conduct_tasks(pattern: &Pattern,
                  path: &PathBuf, 
                  watcher: &mut RecommendedWatcher,
                  metadata: &Metadata) -> () {
 
-    for task in tasks {
+    for task in pattern.tasks.iter().clone() {
     
         match *task {
-           Task::PermissionCheck => permission_check(path, metadata),
+           Task::PermissionCheck => permission_check(path, metadata, pattern.permission_mask),
            Task::AddWatcher => watcher::add_watch(watcher, path),
            Task::Rescan => {
                let new_paths = watcher::rescan(path, watcher);
@@ -47,6 +48,13 @@ pub fn conduct_tasks(tasks: &Vec<Task>,
 }
 
 
-fn permission_check(path: &PathBuf, metadata: &Metadata) -> () {}
+fn permission_check(path: &PathBuf, metadata: &Metadata, permission_mask: u32) -> () {
+
+    if permission_mask | metadata.permissions().mode() != permission_mask {
+        println!("Permissions on path {:?} are {:?} instead of expected {:?}",
+                 path, metadata.permissions().mode(), permission_mask);
+    }
+
+}
 
 

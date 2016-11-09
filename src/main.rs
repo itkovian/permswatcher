@@ -74,14 +74,32 @@ fn main() {
     let patterns = pattern::predefined_patterns();
 
     let (tx, rx) = channel();
-    let paths = opts.values_of("path").unwrap();
+    // TODO: Scan this set of directories based on the given set of patterns.
+    // It sbould thus be limited to say, the _gent_ home, data and scratch filesets
+    // This base dir could be in a config file
+    let initial_paths: Vec<_> = opts.values_of("path").unwrap().collect();
+    let paths = scan_watch_paths(&initial_paths, &patterns);
+
     let mut watcher: RecommendedWatcher = Watcher::new_raw(tx).expect("Failed creating a watcher");
 
     for path in paths {
-        watcher::add_watch(&mut watcher, & PathBuf::from(path));
+        watcher::add_watch(&mut watcher, &path);
     }
 
     let e = watch(&rx, &mut watcher, &patterns);
+}
+
+
+/// Scan the given set of paths for paths that should be watche
+///
+/// Whenever a path under the subtree matches a pattern, it should be 
+/// watched.
+///
+/// TODO: Limit the scan to a certain depth?
+fn scan_watch_paths(paths: &Vec<&str>, patterns: &Vec<pattern::Pattern>) -> Vec<PathBuf> {
+
+    paths.iter().clone().map(|p| PathBuf::from(p)).collect()
+
 }
 
 

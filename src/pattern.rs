@@ -50,7 +50,7 @@ impl Pattern {
 pub fn predefined_patterns() -> Vec<Pattern> {
     let mut m: Vec<Pattern> = Vec::new();
 
-    // USR grouping directories
+    // user grouping directories
     m.push(Pattern::new(
         String::from("USR grouping dir"),
         notify::op::CREATE,
@@ -58,7 +58,7 @@ pub fn predefined_patterns() -> Vec<Pattern> {
         0o750,
         vec![Task::AddWatcher, Task::Rescan]));
 
-    // USR personal directories
+    // user personal directories
     m.push(Pattern::new(
         String::from("USR personal dir"),
         notify::op::CHMOD,

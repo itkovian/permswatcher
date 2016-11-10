@@ -1,9 +1,14 @@
 #[macro_use]
 extern crate clap;
-extern crate env_logger;
-#[macro_use]
-extern crate log;
 extern crate notify;
+#[macro_use]
+extern crate slog;
+extern crate slog_json;
+extern crate slog_term;
+extern crate slog_scope;
+#[macro_use]
+extern crate version;
+
 
 extern crate rustc_serialize;  // for writing JSON in the log messages
 
@@ -16,6 +21,7 @@ use std::sync::mpsc::{channel, Receiver, RecvError};
 use clap::{Arg, App, ArgMatches};
 use notify::{RecommendedWatcher, Watcher, RecursiveMode};
 use notify::op::{Op};
+use slog::DrainExt;
 
 pub mod task;
 pub mod pattern;
@@ -50,29 +56,16 @@ fn get_opts<'a>() -> ArgMatches<'a> {
 }
 
 
-/// Initialise the logger and set the log level
-fn init_logger(loglevel: &str) {
-    let mut log_builder = env_logger::LogBuilder::new();
-    let level = match loglevel {
-        "info" => log::LogLevelFilter::Info,
-        "debug" => log::LogLevelFilter::Debug,
-        "error" => log::LogLevelFilter::Error,
-        _ => log::LogLevelFilter::Warn
-    };
-
-    log_builder
-        .format(|r| format!("*** {}", r.args()))
-        .filter(None, level);
-    log_builder.init().expect("unable to initialize logger");
-}
-
 
 fn main() {
     let opts = get_opts();
-    init_logger(opts.value_of("loglevel").unwrap());
+    let drain = slog_term::streamer().compact().build().fuse();
+    let root_log = slog::Logger::root(drain, o!("version" => version!()));
+    slog_scope::set_global_logger(root_log);
+
+    info!(slog_scope::logger(), "permswatcher starting");
 
     let patterns = pattern::predefined_patterns();
-
     let (tx, rx) = channel();
     // TODO: Scan this set of directories based on the given set of patterns.
     // It sbould thus be limited to say, the _gent_ home, data and scratch filesets
@@ -114,8 +107,8 @@ fn watch(rx: &Receiver<notify::RawEvent>,
                 process(rx, &path, &op, watcher, patterns),
             Ok(notify::RawEvent{path: Some(path), op: Ok(op), cookie: Some(_)}) => 
                 process(rx, &path, &op, watcher, patterns),
-            Ok(event) => warn!("Broken event {:?}", event),
-            Err(e) => warn!("Error {}", e)
+            Ok(event) => warn!(slog_scope::logger(), "Broken event {:?}", event),
+            Err(e) => warn!(slog_scope::logger(), "Error {}", e)
         };
     }
 }
@@ -135,13 +128,13 @@ fn process(rx: &Receiver<notify::RawEvent>,
                                                     .cloned()
                                                     .collect(); // There should be a single match.
             match ps.len() {
-                0 => warn!("No matching pattern found for operation {:?} on path {:?}", op, path), 
+                0 => warn!(slog_scope::logger(), "No matching pattern found for operation {:?} on path {:?}", op, path), 
                 1 => task::conduct_tasks(&ps[0], path, watcher, &metadata),
-                _ => warn!("Multiple matching patterns found for operation {:?} on path {:?}", op, path),
+                _ => warn!(slog_scope::logger(), "Multiple matching patterns found for operation {:?} on path {:?}", op, path),
             };
 
         },
-        Err(_) => warn!("Cannot get metadata for {:?}", path)
+        Err(_) => warn!(slog_scope::logger(), "Cannot get metadata for {:?}", path)
     };
 }
 

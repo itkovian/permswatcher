@@ -6,6 +6,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 extern crate notify;
+extern crate slog_scope;
 
 use notify::{RecommendedWatcher, Watcher, RecursiveMode};
 
@@ -15,10 +16,10 @@ pub fn add_watch(watcher: &mut RecommendedWatcher, path: &PathBuf) -> () {
         match Path::new(path).canonicalize() {
             Ok(canonical_path) => {
                 watcher.watch(&canonical_path, RecursiveMode::NonRecursive).expect("Cannot watch path");
-                info!("Watching path {:?}", canonical_path);
+                info!(slog_scope::logger(), "Watching path {:?}", canonical_path);
             },
             Err(_)             => {
-                info!("Invalid path");
+                info!(slog_scope::logger(), "Invalid path");
                 return;
             }
         }

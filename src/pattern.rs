@@ -66,6 +66,14 @@ pub fn predefined_patterns() -> Vec<Pattern> {
         0o750,
         vec![Task::PermissionCheck]));
 
+    // user .ssh authorized_keys file
+    m.push(Pattern::new(
+        String::from("USR authorized_keys file"),
+        notify::op::CHMOD,
+        Regex::new("^/.*/vsc[0-9]{3}/vsc[0-9]{5}/.ssh/authorized_keys$").unwrap(),
+        0o600,
+        vec![Task::PermissionCheck]));
+
     m
 }
 

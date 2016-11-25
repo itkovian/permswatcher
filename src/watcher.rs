@@ -26,5 +26,5 @@ pub fn add_watch(watcher: &mut RecommendedWatcher, path: &PathBuf) -> () {
 }
 
 
-pub fn rescan(path: &PathBuf, watcher: &RecommendedWatcher) -> () {}
+pub fn rescan(path: &PathBuf, watcher: &mut RecommendedWatcher) -> () {}
 

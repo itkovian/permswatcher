@@ -19,21 +19,28 @@ use task::Task;
 /// Pattern type
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Pattern {
-    name: String,
-    op: Op,
-    pattern: Regex,
-    pub permission_mask: u32,
-    pub tasks: Vec<Task>,
+    name: String,               // for log purposes
+    op: Op,                     // the change operation that is listening for on this pattern
+    base: String,               // the base directory from where we start looking for the pattern
+    pattern: Regex,             // regex identifying the directory or file
+    pub permission_mask: u32,   // detected permissions should be at most this
+    pub tasks: Vec<Task>,       // what to do when the op and pattern match
 }
 
 
 impl Pattern {
 
-    pub fn new(name: String, op: Op, pattern: Regex, permission_mask: u32, tasks: Vec<Task>) -> Pattern {
+    pub fn new(name: String, 
+               op: Op, 
+               base: String,
+               pattern: String,                 // the Regex will be base + pattern
+               permission_mask: u32, 
+               tasks: Vec<Task>) -> Pattern {
         Pattern {
             name: name,
             op: op,
-            pattern: pattern,
+            base: base.clone(),
+            pattern: Regex::new(&(String::from("^") + &base + &pattern)).unwrap(),
             permission_mask: permission_mask,
             tasks: tasks,
         }
@@ -50,27 +57,41 @@ impl Pattern {
 pub fn predefined_patterns() -> Vec<Pattern> {
     let mut m: Vec<Pattern> = Vec::new();
 
+    // TODO: the base should be picked up from the config file (on a per filesystem basis)
+
     // user grouping directories
     m.push(Pattern::new(
         String::from("USR grouping dir"),
         notify::op::CREATE,
-        Regex::new("^/.*/vsc[0-9]{3}$").unwrap(),
+        String::from("/vulpix/home/gent"),
+        String::from("/vsc[0-9]{3}$"),
         0o750,
         vec![Task::AddWatcher, Task::Rescan]));
 
-    // user personal directories
+    // user personal directories chmod
     m.push(Pattern::new(
         String::from("USR personal dir"),
         notify::op::CHMOD,
-        Regex::new("^/.*/vsc[0-9]{3}/vsc[0-9]{5}$").unwrap(),
+        String::from("/vulpix/home/gent"),
+        String::from("/vsc[0-9]{3}/vsc[0-9]{5}$"),
         0o750,
         vec![Task::PermissionCheck]));
+
+    // user personal directories creation
+    m.push(Pattern::new(
+        String::from("USR personal dir"),
+        notify::op::CREATE,
+        String::from("/vulpix/home/gent"),
+        String::from("/vsc[0-9]{3}/vsc[0-9]{5}$"),
+        0o750,
+        vec![Task::AddWatcher]));
 
     // user .ssh authorized_keys file
     m.push(Pattern::new(
         String::from("USR authorized_keys file"),
         notify::op::CHMOD,
-        Regex::new("^/.*/vsc[0-9]{3}/vsc[0-9]{5}/.ssh/authorized_keys$").unwrap(),
+        String::from("/vulpix/home/gent"),
+        String::from("/vsc[0-9]{3}/vsc[0-9]{5}/.ssh/authorized_keys$"),
         0o600,
         vec![Task::PermissionCheck]));
 

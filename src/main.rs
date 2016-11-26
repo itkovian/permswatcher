@@ -14,7 +14,6 @@ extern crate rustc_serialize;  // for writing JSON in the log messages
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
 use std::path::PathBuf;
 use std::sync::mpsc::{channel, Receiver, RecvError};
 
@@ -129,7 +128,7 @@ fn process(rx: &Receiver<notify::RawEvent>,
                                                     .collect(); // There should be a single match.
             match ps.len() {
                 0 => warn!(slog_scope::logger(), "No matching pattern found for operation {:?} on path {:?}", op, path), 
-                1 => task::conduct_tasks(&ps[0], path, watcher, &metadata),
+                1 => task::conduct_tasks(&ps[0], path, watcher, &metadata, patterns),
                 _ => warn!(slog_scope::logger(), "Multiple matching patterns found for operation {:?} on path {:?}", op, path),
             };
 

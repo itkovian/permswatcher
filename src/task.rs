@@ -32,7 +32,8 @@ pub enum Task {
 pub fn conduct_tasks(pattern: &Pattern,
                  path: &PathBuf, 
                  watcher: &mut RecommendedWatcher,
-                 metadata: &Metadata) -> () {
+                 metadata: &Metadata,
+                 patterns: &Vec<Pattern>) -> () {
 
     for task in pattern.tasks.iter().clone() {
     
@@ -40,7 +41,7 @@ pub fn conduct_tasks(pattern: &Pattern,
            Task::PermissionCheck => permission_check(path, metadata, pattern.permission_mask),
            Task::AddWatcher => watcher::add_watch(watcher, path),
            Task::Rescan => {
-               let new_paths = watcher::rescan(path, watcher);
+               let new_paths = watcher::rescan(path, watcher, patterns);
            }
         }
 

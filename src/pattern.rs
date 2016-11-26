@@ -25,7 +25,7 @@ pub struct Pattern<'a> {
     pattern: Regex,             // regex identifying the directory or file
     pub permission_mask: u32,   // detected permissions should be at most this
     pub tasks: Vec<Task>,       // what to do when the op and pattern match
-    base: &'a Path,                 // the base directory from where we start looking for the pattern
+    base: &'a Path,             // the base directory from where we start looking for the pattern
 }
 
 
@@ -51,9 +51,14 @@ impl<'a> Pattern<'a> {
         }
     }
 
-    // Matching a given path?
+    // Matching a given path and operation?
     pub fn is_match(&self, path: &PathBuf, op: &notify::op::Op) -> bool {
         self.pattern.is_match(&path.to_str().unwrap()) && self.op.eq(op)
+    }
+
+    // Matching a given path?
+    pub fn is_path_match(&self, path: &PathBuf) -> bool {
+        self.pattern.is_match(&path.to_str().unwrap())
     }
 }
 
